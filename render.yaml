@@ -1,0 +1,24 @@
+services:
+  - type: cron
+    name: curiosidades-shorts
+    runtime: docker
+    plan: starter
+    # Horário em UTC: 14h e 22h UTC = 11h e 19h em Brasília
+    schedule: "0 14,22 * * *"
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: POLLINATIONS_KEY
+        sync: false
+      - key: YT_CLIENT_ID
+        sync: false
+      - key: YT_CLIENT_SECRET
+        sync: false
+      - key: YT_REFRESH_TOKEN
+        sync: false
+      - key: YT_PRIVACY
+        value: public
+      - key: VIDEOS_POR_EXECUCAO
+        value: "1"
+      - key: GEMINI_TTS_VOICE
+        value: Puck
