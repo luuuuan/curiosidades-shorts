@@ -41,7 +41,9 @@ LLM_PROVIDER = _env("LLM_PROVIDER", "gemini").lower()
 GEMINI_API_KEY = _env(
     "GEMINI_API_KEY", obrigatoria="gemini" in (LLM_PROVIDER, TTS_PROVIDER)
 )
-GEMINI_MODEL = _env("GEMINI_MODEL", "gemini-flash-latest")
+# Modelos do roteiro, em ordem de preferência (se um travar, usa o próximo)
+GEMINI_MODEL = _env("GEMINI_MODEL", "gemini-flash-latest,gemini-flash-lite-latest")
+GEMINI_TIMEOUT = int(_env("GEMINI_TIMEOUT", "90"))  # segundos esperando cada resposta
 
 # Claude (só se LLM_PROVIDER=claude)
 ANTHROPIC_API_KEY = _env("ANTHROPIC_API_KEY", obrigatoria=LLM_PROVIDER == "claude")
