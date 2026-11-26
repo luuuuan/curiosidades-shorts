@@ -3,7 +3,7 @@ name: Gerar Short
 on:
   schedule:
     # Horário em UTC: 14h e 22h UTC = 11h e 19h em Brasília
-    - cron: "0 14,22 * * *"
+    - cron: "0 07,16 * * *"
   workflow_dispatch: # botão "Run workflow" para gerar na hora
 
 permissions:
@@ -17,6 +17,8 @@ jobs:
   gerar:
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    env:
+      PYTHONUNBUFFERED: "1" # mostra o log em tempo real
     steps:
       - uses: actions/checkout@v4
 
