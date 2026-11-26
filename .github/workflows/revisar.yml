@@ -16,6 +16,8 @@ jobs:
   revisar:
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    env:
+      PYTHONUNBUFFERED: "1" # mostra o log em tempo real
     steps:
       # Checagem rápida: se você não respondeu nada, para aqui (leva segundos)
       - name: Tem resposta nova?
