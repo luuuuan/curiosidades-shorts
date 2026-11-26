@@ -2,7 +2,7 @@
 
 Modo grátis (padrão):
   - Imagens: Pollinations (sem cadastro)
-  - Narração: edge-tts (vozes neurais do Microsoft Edge)
+  - Narração: Gemini TTS (reserva: edge-tts)
 Modo pago (opcional): OpenAI para imagem e/ou voz.
 """
 import asyncio
@@ -135,7 +135,7 @@ def _narracao_openai(texto: str, destino: Path) -> list[tuple[str, float, float]
     return [(w.word, float(w.start), float(w.end)) for w in r.words]
 
 
-def _narracao_gemini(texto: str, destino: Path) -> list[tuple[str, float, float]]:
+def _narracao_gemini(texto: str, destino: Path, estilo: str | None = None) -> list[tuple[str, float, float]]:
     import gemini
 
     corpo = {
@@ -145,7 +145,8 @@ def _narracao_gemini(texto: str, destino: Path) -> list[tuple[str, float, float]
             "content": [{
                 "type": "text",
                 "text": texto,
-                "annotations": [{"type": "speech_metadata", "style": config.GEMINI_TTS_STYLE}],
+                "annotations": [{"type": "speech_metadata",
+                                 "style": f"{config.GEMINI_TTS_STYLE} {estilo or ''}".strip()}],
             }],
         }],
         "response_format": {"type": "audio"},
@@ -213,13 +214,13 @@ def _tempos_estimados(audio: Path, texto: str) -> list[tuple[str, float, float]]
     return tempos
 
 
-def gerar_narracao(texto: str, destino: Path) -> list[tuple[str, float, float]]:
+def gerar_narracao(texto: str, destino: Path, estilo: str | None = None) -> list[tuple[str, float, float]]:
     """Gera o áudio e devolve [(palavra, início, fim), ...]."""
     if config.TTS_PROVIDER == "openai":
         palavras = _com_retry(_narracao_openai, texto, destino)
     elif config.TTS_PROVIDER == "gemini":
         try:
-            palavras = _narracao_gemini(texto, destino)
+            palavras = _narracao_gemini(texto, destino, estilo)
         except Exception as e:  # noqa: BLE001
             print(f"[midia] Gemini TTS falhou ({e}); usando edge-tts")
             palavras = _com_retry(_narracao_edge, texto, destino)

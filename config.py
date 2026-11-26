@@ -30,6 +30,10 @@ def _env(nome: str, padrao: str | None = None, obrigatoria: bool = False) -> str
 DRY_RUN = _env("DRY_RUN", "false").lower() in ("1", "true", "sim", "yes")
 
 # Claude (roteiro + checagem dos fatos)
+# Quem gera imagem e voz
+IMAGE_PROVIDER = _env("IMAGE_PROVIDER", "pollinations").lower()  # pollinations | openai
+TTS_PROVIDER = _env("TTS_PROVIDER", "gemini").lower()  # gemini | edge | openai
+
 # Quem escreve o roteiro: "gemini" (grátis) ou "claude" (pago)
 LLM_PROVIDER = _env("LLM_PROVIDER", "gemini").lower()
 
@@ -43,9 +47,6 @@ GEMINI_MODEL = _env("GEMINI_MODEL", "gemini-flash-latest")
 ANTHROPIC_API_KEY = _env("ANTHROPIC_API_KEY", obrigatoria=LLM_PROVIDER == "claude")
 CLAUDE_MODEL = _env("CLAUDE_MODEL", "claude-sonnet-5-5")
 
-# Quem gera imagem e voz: "pollinations"/"edge" (grátis) ou "openai" (pago)
-IMAGE_PROVIDER = _env("IMAGE_PROVIDER", "pollinations").lower()
-TTS_PROVIDER = _env("TTS_PROVIDER", "gemini").lower()  # gemini | edge | openai
 
 # Voz do Gemini (grátis). Vozes: Puck, Charon, Kore, Fenrir, Orus, Aoede, Zephyr, Leda...
 GEMINI_TTS_MODEL = _env("GEMINI_TTS_MODEL", "gemini-3.8-flash-tts")
@@ -82,10 +83,16 @@ TTS_INSTRUCOES = _env(
 )
 
 # YouTube
-YT_CLIENT_ID = _env("YT_CLIENT_ID", obrigatoria=not DRY_RUN)
-YT_CLIENT_SECRET = _env("YT_CLIENT_SECRET", obrigatoria=not DRY_RUN)
-YT_REFRESH_TOKEN = _env("YT_REFRESH_TOKEN", obrigatoria=not DRY_RUN)
+YT_CLIENT_ID = _env("YT_CLIENT_ID", "")
+YT_CLIENT_SECRET = _env("YT_CLIENT_SECRET", "")
+YT_REFRESH_TOKEN = _env("YT_REFRESH_TOKEN", "")
+YOUTUBE_OK = bool(YT_CLIENT_ID and YT_CLIENT_SECRET and YT_REFRESH_TOKEN)
 YT_PRIVACY = _env("YT_PRIVACY", "public")  # public | unlisted | private
+
+# Telegram (aprovação antes de postar). Sem token, posta direto sem aprovação.
+TELEGRAM_BOT_TOKEN = _env("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_ID = _env("TELEGRAM_CHAT_ID", "")
+APROVACAO = bool(TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID)
 
 # Quantos vídeos cada execução do cron produz
 VIDEOS_POR_EXECUCAO = int(_env("VIDEOS_POR_EXECUCAO", "1"))

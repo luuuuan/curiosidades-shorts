@@ -120,4 +120,19 @@ def montar_video(imagens: list[Path], duracoes: list[float], audio: Path,
         "-c:a", "aac", "-b:a", "160k", "-shortest", "-movflags", "+faststart",
         str(destino),
     ])
-    return destino
+    return _limitar_tamanho(destino, pasta)
+
+
+def _limitar_tamanho(video: Path, pasta: Path, limite_mb: float = 18) -> Path:
+    """O Telegram só deixa o bot baixar arquivos de até 20 MB."""
+    if video.stat().st_size <= limite_mb * 1024 * 1024:
+        return video
+    seg = duracao(video)
+    kbps = max(int(limite_mb * 8 * 1024 / seg * 0.92) - 160, 500)
+    menor = pasta / "short_menor.mp4"
+    _rodar([
+        "ffmpeg", "-y", "-i", str(video), "-c:v", "libx264", "-preset", "veryfast",
+        "-b:v", f"{kbps}k", "-maxrate", f"{kbps}k", "-bufsize", f"{kbps * 2}k",
+        "-pix_fmt", "yuv420p", "-c:a", "copy", "-movflags", "+faststart", str(menor),
+    ])
+    return menor

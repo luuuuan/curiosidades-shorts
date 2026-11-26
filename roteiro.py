@@ -24,13 +24,14 @@ Regras:
 
 NÃO repita nenhum destes temas já publicados:
 {anteriores}
-
+{extras}
 Responda SOMENTE com JSON válido neste formato:
 {{
   "tema": "resumo do tema em poucas palavras",
   "titulo": "título chamativo, até 70 caracteres, sem hashtag",
   "descricao": "2 ou 3 frases explicando o fato",
   "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
+  "estilo_voz": "how the narrator should sound, IN ENGLISH (energy, pace, tone)",
   "cenas": [
     {{"narracao": "texto falado da cena", "prompt_imagem": "english image prompt"}}
   ]
@@ -101,12 +102,52 @@ def _validar(r: dict) -> None:
         raise ValueError(f"Narração com {palavras} palavras")
 
 
-def gerar_roteiro(titulos_anteriores: list[str], tentativas: int = 4) -> dict:
+def _extras(diretrizes: str, anterior: dict | None, feedback: str | None) -> str:
+    partes = []
+    if diretrizes:
+        partes.append(
+            "\nREGRAS DA DONA DO CANAL (têm prioridade sobre as regras acima):\n" + diretrizes
+        )
+    if anterior and feedback:
+        partes.append(
+            "\nESTE É UM ROTEIRO REFEITO. Versão anterior, que foi reprovada:\n"
+            + json.dumps(anterior, ensure_ascii=False)
+            + f"\n\nPedido de ajuste da dona do canal: {feedback}\n"
+            "Atenda exatamente ao pedido. Mantenha o mesmo tema, a não ser que o pedido "
+            "diga para trocar. Se o pedido for sobre a voz, ajuste o campo estilo_voz."
+        )
+    return "\n".join(partes) + "\n" if partes else ""
+
+
+def extrair_regra(feedback: str) -> str | None:
+    """Transforma um pedido de ajuste em regra permanente, se ele valer pra todos os vídeos."""
+    prompt = (
+        "A dona de um canal de Shorts de curiosidades deu este pedido de ajuste sobre um "
+        f"vídeo:\n\n\"{feedback}\"\n\nSe o pedido traz uma preferência que deve valer para "
+        "TODOS os próximos vídeos (estilo do texto, ritmo, voz, visual das imagens, tipo de "
+        "tema, tamanho), reescreva como uma regra curta e geral em português. Se for algo só "
+        "deste vídeo (trocar este tema específico, corrigir um fato deste vídeo), deixe vazio."
+        '\n\nResponda SOMENTE com JSON: {"regra": "texto da regra ou vazio"}'
+    )
+    try:
+        regra = (_perguntar(prompt).get("regra") or "").strip()
+    except Exception as e:  # noqa: BLE001
+        print(f"[roteiro] não consegui extrair regra: {e}")
+        return None
+    return regra or None
+
+
+def gerar_roteiro(titulos_anteriores: list[str], diretrizes: str = "",
+                  anterior: dict | None = None, feedback: str | None = None,
+                  tentativas: int = 4) -> dict:
+    if anterior:
+        titulos_anteriores = [t for t in titulos_anteriores if t != anterior.get("titulo")]
     anteriores = "\n".join(f"- {t}" for t in titulos_anteriores) or "(nenhum ainda)"
+    extras = _extras(diretrizes, anterior, feedback)
     ultimo_erro = None
     for n in range(1, tentativas + 1):
         try:
-            roteiro = _perguntar(PROMPT_ROTEIRO.format(anteriores=anteriores))
+            roteiro = _perguntar(PROMPT_ROTEIRO.format(anteriores=anteriores, extras=extras))
             _validar(roteiro)
             checagem = _perguntar(
                 PROMPT_CHECAGEM.format(roteiro=json.dumps(roteiro, ensure_ascii=False))

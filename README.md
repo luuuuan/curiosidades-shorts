@@ -4,7 +4,11 @@ Gera e posta Shorts de curiosidades sozinho, de graça, rodando no GitHub Action
 
 **Fluxo:** Gemini escreve o roteiro → uma segunda chamada checa os fatos → Pollinations gera
 as imagens → Gemini TTS narra em pt-BR → Whisper marca o tempo de cada palavra → FFmpeg monta
-o vídeo vertical com zoom e legenda → YouTube Data API posta como Short.
+o vídeo vertical com zoom e legenda → **manda pra você aprovar no Telegram** → se aprovar,
+posta no YouTube; se pedir ajuste, refaz com o seu pedido e manda de novo.
+
+Cada pedido de ajuste que vale pra todos os vídeos (ex.: "voz mais calma") vira uma regra
+em `estado/diretrizes.md`, e os próximos roteiros já seguem. Pode editar esse arquivo à vontade.
 
 O canal não repete tema: antes de cada vídeo, o script lê os últimos títulos do canal.
 Se a voz do Gemini falhar ou bater o limite, o edge-tts entra no lugar automaticamente.
@@ -57,7 +61,34 @@ Opcional: `py -m pip install faster-whisper` deixa a legenda sincronizada certin
 a legenda usa um tempo estimado (fica um pouco menos precisa). No GitHub Actions ele já é
 instalado automaticamente.
 
-## 4. Deixar rodando no GitHub Actions (grátis)
+## 4. Bot do Telegram
+
+1. No Telegram, abra o **@BotFather**, mande `/newbot`, escolha um nome e um usuário
+   (tem que terminar em `bot`). Ele te dá o **token** → é o `TELEGRAM_BOT_TOKEN`.
+2. Abra o seu bot e mande um "oi" pra ele.
+3. No PC, coloque o token no `.env` (`TELEGRAM_BOT_TOKEN=...`) e rode:
+   ```
+   py telegram_bot.py
+   ```
+   Ele mostra o `TELEGRAM_CHAT_ID`. O bot só obedece a esse chat; qualquer outra pessoa
+   que falar com ele é ignorada.
+
+**Como usar:** o vídeo chega com os botões ✅ **Aprovar** e ✏️ **Refazer**.
+- Aprovar → ele posta e te manda o link.
+- Refazer → ele pergunta o que melhorar; responda aquela mensagem com o seu pedido.
+- Mande `/novo` a qualquer hora para gerar um vídeo extra.
+
+O robô confere suas respostas a cada 15 minutos, então depois de clicar pode levar até uns
+15 min (mais o tempo de gerar, no caso de refazer). Vídeo sem resposta fica esperando: nada
+é postado sem a sua aprovação.
+
+Sem `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID`, o robô posta direto, sem aprovação.
+
+**Testar no PC:** com `DRY_RUN=false` e as variáveis do Telegram no `.env`,
+`py main.py gerar` manda o vídeo pro Telegram e `py main.py revisar` processa o que você
+respondeu.
+
+## 5. Deixar rodando no GitHub Actions (grátis)
 
 1. Crie um repositório **público** no GitHub e suba esta pasta.
    O `.gitignore` já deixa de fora o `.env` e o `client_secret.json`, então nenhuma chave
@@ -65,19 +96,24 @@ instalado automaticamente.
 2. No repositório: **Settings → Secrets and variables → Actions → New repository secret**.
    Crie um para cada:
    - `GEMINI_API_KEY`
+   - `TELEGRAM_BOT_TOKEN`
+   - `TELEGRAM_CHAT_ID`
    - `YT_CLIENT_ID`
    - `YT_CLIENT_SECRET`
    - `YT_REFRESH_TOKEN`
    - `POLLINATIONS_KEY` (opcional)
 3. Aba **Actions** → libere os workflows se o GitHub pedir.
-4. Para testar na hora: **Actions → Postar Short → Run workflow**. Clique na execução para
-   ver o log.
+4. Para testar na hora: **Actions → Gerar Short → Run workflow**. Clique na execução para
+   ver o log. Em poucos minutos o vídeo chega no Telegram.
 
-Depois disso ele roda sozinho às 11h e às 19h (horário de Brasília). Para mudar, edite o
-`cron` em `.github/workflows/shorts.yml` (o horário é em UTC: Brasília + 3h).
+São dois agendamentos:
+- **Gerar Short** (`gerar.yml`): gera um vídeo às 11h e às 19h (Brasília) e manda pro
+  Telegram. Para mudar, edite o `cron` (o horário é em UTC: Brasília + 3h).
+- **Revisar respostas do Telegram** (`revisar.yml`): a cada 15 min vê se você respondeu.
+  Se não tiver nada novo, termina em segundos.
 
-O GitHub pausa agendamentos de repositório parado há 60 dias. O workflow já faz um commit
-automático a cada execução para isso não acontecer.
+Os workflows salvam os roteiros e as regras na pasta `estado/` com commits automáticos.
+Isso também evita que o GitHub pause o agendamento (ele pausa repositório parado há 60 dias).
 
 > O agendamento do GitHub pode atrasar alguns minutos em horário de pico. É normal.
 
@@ -100,7 +136,8 @@ Começar com 1 ou 2 por dia é o ideal até ver o que performa.
 
 ## Alternativa: Render
 O `Dockerfile` e o `render.yaml` continuam na pasta, caso prefira rodar como Cron Job no
-Render (pago, mínimo de US$ 1/mês).
+Render (pago, mínimo de US$ 1/mês). Ele está configurado só para o modo sem aprovação;
+para usar o Telegram no Render seria preciso um segundo cron job rodando `python main.py revisar`.
 
 ## Boas práticas para não perder monetização
 - O roteiro é único a cada vídeo e passa por checagem de fatos. Não tire essa etapa.
