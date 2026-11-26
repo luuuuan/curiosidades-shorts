@@ -61,16 +61,7 @@ def _extrair_json(texto: str) -> dict:
 def _gemini(prompt: str) -> str:
     import gemini
 
-    corpo = {
-        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-        "generationConfig": {"responseMimeType": "application/json", "temperature": 1.0},
-    }
-    dados = gemini.post(f"models/{config.GEMINI_MODEL}:generateContent", corpo)
-    try:
-        partes = dados["candidates"][0]["content"]["parts"]
-    except (KeyError, IndexError) as e:
-        raise ValueError(f"Gemini sem resposta: {str(dados)[:300]}") from e
-    return "".join(p.get("text", "") for p in partes if not p.get("thought"))
+    return gemini.texto(prompt)
 
 
 # ---------------------------------------------------------------- Claude
