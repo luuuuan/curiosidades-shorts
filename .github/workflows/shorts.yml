@@ -2,7 +2,7 @@ name: Postar Short
 
 on:
   schedule:
-    # Horário em UTC: 14h e 22h UTC = 11h e 19h em Brasília
+    # Horário em UTC: 08h e 19h UTC = 11h e 19h em Brasília
     - cron: "0 14,22 * * *"
   workflow_dispatch: # botão "Run workflow" para rodar na hora
 
