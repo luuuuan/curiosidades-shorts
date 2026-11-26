@@ -65,7 +65,7 @@ def _gemini(prompt: str) -> str:
         "contents": [{"role": "user", "parts": [{"text": prompt}]}],
         "generationConfig": {"responseMimeType": "application/json", "temperature": 1.0},
     }
-    dados = gemini.post(f"models/{config.GEMINI_MODEL}:generateContent", corpo, timeout=120)
+    dados = gemini.post(f"models/{config.GEMINI_MODEL}:generateContent", corpo)
     try:
         partes = dados["candidates"][0]["content"]["parts"]
     except (KeyError, IndexError) as e:
