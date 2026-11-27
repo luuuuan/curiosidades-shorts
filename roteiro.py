@@ -15,7 +15,9 @@ Regras:
 - Evite saúde/medicina, política, religião, tragédias recentes e pessoas reais vivas.
 - Varie a área: ciência, animais, espaço, história, geografia, corpo humano (sem conselho
   médico), tecnologia, idiomas, comida, objetos do dia a dia.
-- Narração total entre 75 e 105 palavras (uns 30 a 40 segundos). Curto e denso, sem enrolação.
+- TAMANHO: narração total entre 75 e 105 palavras (uns 30 a 40 segundos). A cena 1 (gancho)
+  é curta, mas CADA UMA das outras cenas precisa ter de 18 a 25 palavras. Conte antes de
+  responder: menos de 75 palavras no total é rejeitado.
 - FORMATO deste vídeo: {formato}
 - GANCHO (cena 1): no máximo 12 palavras, já com a parte mais chocante do fato. Proibido
   começar com 'Você sabia', 'Olá', 'Hoje', 'Neste vídeo', 'Vamos' ou qualquer apresentação.
@@ -113,7 +115,7 @@ def _validar(r: dict) -> None:
     if not 3 <= len(r["cenas"]) <= 7:
         raise ValueError(f"{len(r['cenas'])} cenas (esperado 4 a 6)")
     palavras = sum(len(c["narracao"].split()) for c in r["cenas"])
-    if not 60 <= palavras <= 120:
+    if not 55 <= palavras <= 125:
         raise ValueError(f"Narração com {palavras} palavras")
     gancho = len(r["cenas"][0]["narracao"].split())
     if gancho > 16:
@@ -196,7 +198,8 @@ def gerar_roteiro(titulos_anteriores: list[str], diretrizes: str = "",
                 correcao = (
                     f"\n\nATENÇÃO: a versão anterior saiu com {ultimo_erro.split()[2]} palavras. "
                     "A narração TOTAL (somando todas as cenas) precisa ter entre 75 e 105 "
-                    "palavras.\n"
+                    "palavras. Mantenha o gancho curto, mas escreva 4 ou 5 cenas depois dele "
+                    "com 18 a 25 palavras CADA, trazendo mais detalhes do fato.\n"
                 )
             elif ultimo_erro.startswith("Gancho"):
                 correcao = (
