@@ -1,0 +1,40 @@
+{
+  "tema": "O que aconteceria se a Terra parasse de girar",
+  "titulo": "E se a Terra parasse de girar de repente?",
+  "descricao": "Descubra o que a física prevê para o nosso planeta se a rotação da Terra parasse instantaneamente, mantendo a inércia dos oceanos e da atmosfera.",
+  "tags": [
+    "terra",
+    "fisica",
+    "ciencia",
+    "curiosidades",
+    "espaco"
+  ],
+  "estilo_voz": "deep, dramatic, steady pace, suspenseful tone",
+  "cenas": [
+    {
+      "narracao": "Tudo na Terra seria arremessado a mil e seiscentos quilômetros por hora se o planeta parasse.",
+      "visual": "imagem",
+      "prompt_imagem": "Cinematic vertical image of planet Earth abruptly stopping rotation, glowing atmosphere, deep space background, highly detailed, photorealistic",
+      "busca": "earth from space rotation"
+    },
+    {
+      "narracao": "Oceanos inteiros continuariam se movendo pela pura inércia, formando ondas gigantescas que engoliriam continentes inteiros.",
+      "visual": "video",
+      "prompt_imagem": "Cinematic vertical view of a massive tsunami wave crashing over a coastal city, highly detailed, dramatic lighting",
+      "busca": "huge ocean wave tsunami"
+    },
+    {
+      "narracao": "Ventos supersônicos devastadores varrida a superfície terrestre, destruindo construções e arrastando tudo o que encontrassem pelo caminho.",
+      "visual": "video",
+      "prompt_imagem": "Cinematic vertical view of a powerful supersonic windstorm tearing through a forest, flying debris, dramatic lighting",
+      "busca": "strong wind storm forest"
+    },
+    {
+      "narracao": "A atmosfera continuaria girando em alta velocidade, criando um cenário de destruição total até que",
+      "visual": "imagem",
+      "prompt_imagem": "Cinematic vertical image of a cracked and desolate planet surface under a turbulent glowing sky, highly detailed",
+      "busca": "desolate planet surface"
+    }
+  ],
+  "formato": "E SE..."
+}
