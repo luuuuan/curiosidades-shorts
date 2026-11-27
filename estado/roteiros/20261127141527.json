@@ -1,0 +1,40 @@
+{
+  "tema": "Origem do salto alto",
+  "titulo": "O calçado nobre que nasceu no campo de batalha",
+  "descricao": "Descubra como o salto alto começou a ser usado por cavaleiros persas no século dezessete para manter os pés firmes nos estribos durante os combates.",
+  "tags": [
+    "historia",
+    "curiosidades",
+    "calcados",
+    "origem",
+    "moda"
+  ],
+  "estilo_voz": "dynamic, engaging, confident and slightly mysterious tone with a natural human cadence",
+  "cenas": [
+    {
+      "narracao": "O salto alto foi criado originalmente para homens na guerra e não para a moda.",
+      "visual": "imagem",
+      "prompt_imagem": "Realistic historical painting style showing a Persian cavalry soldier on a horse wearing high heels for stirrups, cinematic lighting, highly detailed.",
+      "busca": "persian horse rider"
+    },
+    {
+      "narracao": "No final do século dezesseis, cavaleiros persas usavam saltos grossos para travar as botas nos estribos dos cavalos.",
+      "visual": "video",
+      "prompt_imagem": "Close up realistic shot of a leather riding boot with a heel locked into a metal stirrup, cinematic lighting, 4k.",
+      "busca": "horse riding boots stirrup"
+    },
+    {
+      "narracao": "Isso dava muito mais firmeza na hora de usar o arco e a flecha montado no animal galopando.",
+      "visual": "video",
+      "prompt_imagem": "Realistic cinematic shot of a horse running across a field with dust rising, golden hour lighting.",
+      "busca": "horse running field cinematic"
+    },
+    {
+      "narracao": "Quando embaixadores persas viajaram para a Europa, a nobreza europeia copiou o estilo para demonstrar poder e status, e",
+      "visual": "imagem",
+      "prompt_imagem": "Realistic historical portrait of a European aristocrat from the seventeen hundreds wearing elegant heeled shoes, detailed textures.",
+      "busca": "european aristocrat portrait"
+    }
+  ],
+  "formato": "ORIGEM"
+}
