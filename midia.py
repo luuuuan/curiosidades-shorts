@@ -223,28 +223,38 @@ def _narracao_openai(texto: str, destino: Path) -> list[tuple[str, float, float]
 def _narracao_gemini(texto: str, destino: Path, estilo: str | None = None) -> list[tuple[str, float, float]]:
     import gemini
 
-    corpo = {
-        "model": config.GEMINI_TTS_MODEL,
-        "input": [{
-            "type": "user_input",
-            "content": [{
-                "type": "text",
-                "text": texto,
-                "annotations": [{"type": "speech_metadata",
-                                 "style": f"{config.GEMINI_TTS_STYLE} {estilo or ''}".strip()}],
+    audios, ultimo = [], None
+    for modelo in [m.strip() for m in config.GEMINI_TTS_MODEL.split(",") if m.strip()]:
+        corpo = {
+            "model": modelo,
+            "input": [{
+                "type": "user_input",
+                "content": [{
+                    "type": "text",
+                    "text": texto,
+                    "annotations": [{"type": "speech_metadata",
+                                     "style": f"{config.GEMINI_TTS_STYLE} {estilo or ''}".strip()}],
+                }],
             }],
-        }],
-        "response_format": {"type": "audio"},
-        "generation_config": {"speech_config": [{"voice": config.GEMINI_TTS_VOICE}]},
-    }
-    dados = gemini.post("interactions", corpo)
-    audios = [
-        c["data"]
-        for passo in dados.get("steps", []) if passo.get("type") == "model_output"
-        for c in passo.get("content", []) if c.get("type") == "audio" and c.get("data")
-    ]
+            "response_format": {"type": "audio"},
+            "generation_config": {"speech_config": [{"voice": config.GEMINI_TTS_VOICE}]},
+        }
+        try:
+            dados = gemini.post("interactions", corpo, tentativas=1)
+        except gemini.GeminiErro as e:
+            ultimo = e
+            print(f"[midia] voz {modelo} falhou ({str(e)[:120].strip()}); indo pro próximo")
+            continue
+        audios = [
+            c["data"]
+            for passo in dados.get("steps", []) if passo.get("type") == "model_output"
+            for c in passo.get("content", []) if c.get("type") == "audio" and c.get("data")
+        ]
+        if audios:
+            break
+        ultimo = RuntimeError(f"{modelo} sem áudio: {str(dados)[:200]}")
     if not audios:
-        raise RuntimeError(f"Gemini TTS sem áudio: {str(dados)[:300]}")
+        raise RuntimeError(f"Nenhum modelo de voz do Gemini funcionou: {ultimo}")
     bruto = base64.b64decode(audios[-1])
 
     wav = destino.with_suffix(".wav")
