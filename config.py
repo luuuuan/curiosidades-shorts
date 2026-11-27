@@ -23,7 +23,7 @@ _SEGREDOS: list[str] = []
 
 
 def _env(nome: str, padrao: str | None = None, obrigatoria: bool = False) -> str | None:
-    valor = os.getenv(nome, padrao)
+    valor = os.getenv(nome) or padrao  # variável vazia (ex.: não criada no GitHub) usa o padrão
     if isinstance(valor, str):
         # tira espaços e quebras de linha coladas sem querer junto com a chave
         valor = valor.strip()
