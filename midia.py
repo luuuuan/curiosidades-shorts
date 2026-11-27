@@ -312,6 +312,7 @@ def _narracao_gemini(texto: str, destino: Path, estilo: str | None = None) -> li
             for c in passo.get("content", []) if c.get("type") == "audio" and c.get("data")
         ]
         if audios:
+            print(f"[midia] narração com {modelo}, voz {config.GEMINI_TTS_VOICE}")
             break
         ultimo = RuntimeError(f"{modelo} sem áudio: {str(dados)[:200]}")
     if not audios:
