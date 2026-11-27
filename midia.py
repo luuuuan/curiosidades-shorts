@@ -342,9 +342,22 @@ def _tempos_por_audio(audio: Path, texto: str) -> list[tuple[str, float, float]]
         print("[midia] faster-whisper não instalado: legenda com tempo estimado")
         return _tempos_estimados(audio, texto)
 
-    modelo = WhisperModel(config.WHISPER_MODEL, device="cpu", compute_type="int8")
-    segmentos, _ = modelo.transcribe(str(audio), language="pt", word_timestamps=True)
-    palavras = [(w.word.strip(), w.start, w.end) for s in segmentos for w in (s.words or [])]
+    try:
+        import numpy as np
+
+        # decodifica com o ffmpeg (16 kHz mono) em vez de deixar o Whisper abrir o arquivo:
+        # versões novas do PyAV quebram a leitura interna do faster-whisper
+        pcm = subprocess.run(
+            ["ffmpeg", "-v", "quiet", "-i", str(audio), "-f", "s16le", "-ac", "1", "-ar", "16000", "-"],
+            capture_output=True, check=True,
+        ).stdout
+        amostras = np.frombuffer(pcm, dtype=np.int16).astype(np.float32) / 32768.0
+        modelo = WhisperModel(config.WHISPER_MODEL, device="cpu", compute_type="int8")
+        segmentos, _ = modelo.transcribe(amostras, language="pt", word_timestamps=True)
+        palavras = [(w.word.strip(), w.start, w.end) for s in segmentos for w in (s.words or [])]
+    except Exception as e:  # noqa: BLE001
+        print(f"[midia] Whisper falhou ({e}); legenda com tempo estimado")
+        palavras = []
     return palavras or _tempos_estimados(audio, texto)
 
 
