@@ -31,7 +31,7 @@ DRY_RUN = _env("DRY_RUN", "false").lower() in ("1", "true", "sim", "yes")
 
 # Claude (roteiro + checagem dos fatos)
 # Quem gera imagem e voz
-IMAGE_PROVIDER = _env("IMAGE_PROVIDER", "pollinations").lower()  # pollinations | openai
+IMAGE_PROVIDER = _env("IMAGE_PROVIDER", "cloudflare,pexels").lower()  # ordem de tentativa
 TTS_PROVIDER = _env("TTS_PROVIDER", "gemini").lower()  # gemini | edge | openai
 
 # Quem escreve o roteiro: "gemini" (grátis) ou "claude" (pago)
@@ -42,7 +42,7 @@ GEMINI_API_KEY = _env(
     "GEMINI_API_KEY", obrigatoria="gemini" in (LLM_PROVIDER, TTS_PROVIDER)
 )
 # Modelos do roteiro, em ordem de preferência (se um travar, usa o próximo)
-GEMINI_MODEL = _env("GEMINI_MODEL", "gemini-flash-latest,gemini-flash-lite-latest")
+GEMINI_MODEL = _env("GEMINI_MODEL", "gemini-flash-lite-latest,gemini-flash-latest")
 GEMINI_TIMEOUT = int(_env("GEMINI_TIMEOUT", "90"))  # segundos esperando cada resposta
 
 # Claude (só se LLM_PROVIDER=claude)
@@ -62,7 +62,15 @@ GEMINI_TTS_STYLE = _env(
 # Whisper local (faster-whisper) para marcar o tempo das palavras na legenda
 WHISPER_MODEL = _env("WHISPER_MODEL", "base")
 
-# Pollinations (imagens grátis). Chave opcional em enter.pollinations.ai: tira o limite de 15s
+# Cloudflare Workers AI (imagens por IA, cota grátis diária)
+CLOUDFLARE_ACCOUNT_ID = _env("CLOUDFLARE_ACCOUNT_ID", "")
+CLOUDFLARE_API_TOKEN = _env("CLOUDFLARE_API_TOKEN", "")
+CLOUDFLARE_IMAGE_MODEL = _env("CLOUDFLARE_IMAGE_MODEL", "@cf/black-forest-labs/flux-1-schnell")
+
+# Pexels (fotos reais grátis): chave em pexels.com/api
+PEXELS_API_KEY = _env("PEXELS_API_KEY", "")
+
+# Pollinations (só funciona com saldo hoje). Chave opcional em enter.pollinations.ai: tira o limite de 15s
 POLLINATIONS_KEY = _env("POLLINATIONS_KEY", "")
 POLLINATIONS_MODEL = _env("POLLINATIONS_MODEL", "flux")
 
@@ -72,7 +80,7 @@ EDGE_RATE = _env("EDGE_RATE", "+10%")
 
 # OpenAI (só se escolher openai acima)
 OPENAI_API_KEY = _env(
-    "OPENAI_API_KEY", obrigatoria="openai" in (IMAGE_PROVIDER, TTS_PROVIDER)
+    "OPENAI_API_KEY", obrigatoria=IMAGE_PROVIDER == "openai" or TTS_PROVIDER == "openai"
 )
 OPENAI_IMAGE_MODEL = _env("OPENAI_IMAGE_MODEL", "gpt-image-1")
 OPENAI_IMAGE_QUALITY = _env("OPENAI_IMAGE_QUALITY", "medium")  # low | medium | high
