@@ -1,0 +1,46 @@
+{
+  "tema": "Comparação entre o Monte Everest e a Fossa das Marianas",
+  "titulo": "Se o Everest coubesse na Fossa das Marianas",
+  "descricao": "Uma comparação impressionante entre o ponto mais alto da Terra e o local mais profundo do oceano, revelando a imensidão do nosso planeta.",
+  "tags": [
+    "everest",
+    "fossa das marianas",
+    "geografia",
+    "curiosidades",
+    "ciencia"
+  ],
+  "estilo_voz": "deep, calm, mysterious, slow pace, engaging documentary style",
+  "cenas": [
+    {
+      "narracao": "O Monte Everest é gigante, mas caberia inteiro dentro da Fossa das Marianas.",
+      "visual": "imagem",
+      "prompt_imagem": "Vertical 9:16 cinematic image, split view showing Mount Everest underwater inside a massive dark oceanic trench, highly detailed, photorealistic, no text",
+      "busca": "ocean trench underwater"
+    },
+    {
+      "narracao": "Enquanto a montanha mais alta do mundo tem cerca de oito mil e oitocentos metros de altura...",
+      "visual": "video",
+      "prompt_imagem": "Vertical 9:16 cinematic aerial drone view of snowy Mount Everest peak piercing through clouds, bright sunlight, photorealistic",
+      "busca": "mount everest peak snow"
+    },
+    {
+      "narracao": "...o ponto mais profundo do oceano afunda mais de onze quilômetros abaixo da superfície do mar.",
+      "visual": "video",
+      "prompt_imagem": "Vertical 9:16 cinematic deep sea dark blue water, dramatic lighting descending into the abyss, photorealistic",
+      "busca": "deep ocean underwater abyss"
+    },
+    {
+      "narracao": "Isso significa que se você afundasse o Everest ali, ainda sobrariam dois quilômetros de água pura acima dele...",
+      "visual": "imagem",
+      "prompt_imagem": "Vertical 9:16 cinematic digital diagram showing Mount Everest submerged completely inside a deep ocean trench with water level far above, photorealistic",
+      "busca": "underwater mountain"
+    },
+    {
+      "narracao": "...mostrando que a nossa maior montanha parece pequena perto da imensidão azul, pois",
+      "visual": "video",
+      "prompt_imagem": "Vertical 9:16 cinematic vast open ocean surface reflecting dramatic clouds at sunset, photorealistic",
+      "busca": "open ocean waves"
+    }
+  ],
+  "formato": "COMPARAÇÃO"
+}
