@@ -51,7 +51,11 @@ jobs:
 
       - name: Instalar FFmpeg e fonte
         if: steps.checar.outputs.tem == 'true'
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg fonts-dejavu-core
+        run: |
+          # o repositório da Microsoft no runner às vezes dá 403 e derruba o apt-get update
+          sudo rm -f /etc/apt/sources.list.d/microsoft*.list /etc/apt/sources.list.d/microsoft*.sources
+          sudo apt-get update || true
+          sudo apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core
 
       - name: Instalar dependências
         if: steps.checar.outputs.tem == 'true'
