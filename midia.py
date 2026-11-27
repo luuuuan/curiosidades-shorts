@@ -28,8 +28,10 @@ def _com_retry(func, *args, tentativas: int = 3, **kwargs):
         try:
             return func(*args, **kwargs)
         except Exception as e:  # noqa: BLE001
-            sem_credito = getattr(e, "code", None) == "insufficient_quota" or "credits" in str(e)
-            if n == tentativas or sem_credito:
+            codigo = getattr(e, "code", None)
+            sem_credito = codigo == "insufficient_quota" or "credits" in str(e)
+            definitivo = isinstance(codigo, int) and 400 <= codigo < 500 and codigo != 429
+            if n == tentativas or sem_credito or definitivo:
                 raise
             espera = 20 * n
             print(f"[midia] erro ({e}); tentando de novo em {espera}s")
@@ -86,10 +88,93 @@ def _imagem_openai(prompt: str, destino: Path) -> Path:
     return destino
 
 
-def gerar_imagem(prompt: str, destino: Path) -> Path:
-    if config.IMAGE_PROVIDER == "openai":
-        return _com_retry(_imagem_openai, prompt, destino)
-    return _com_retry(_imagem_pollinations, prompt, destino)
+def _baixar(url: str, headers: dict | None = None, timeout: int = 120) -> tuple[bytes, str]:
+    req = urllib.request.Request(url, headers={"User-Agent": "curiosidades-shorts/1.0", **(headers or {})})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return r.read(), r.headers.get("Content-Type", "")
+
+
+def _imagem_cloudflare(prompt: str, destino: Path, busca: str | None = None) -> Path:
+    """FLUX.1 schnell na Cloudflare Workers AI (cota grátis diária)."""
+    import json
+
+    url = (f"https://api.cloudflare.com/client/v4/accounts/{config.CLOUDFLARE_ACCOUNT_ID}"
+           f"/ai/run/{config.CLOUDFLARE_IMAGE_MODEL}")
+    corpo = json.dumps({"prompt": prompt + ESTILO_IMAGEM, "steps": 6,
+                        "seed": int(time.time() * 1000) % 2_000_000}).encode()
+    req = urllib.request.Request(url, data=corpo, headers={
+        "Authorization": f"Bearer {config.CLOUDFLARE_API_TOKEN}",
+        "Content-Type": "application/json",
+    })
+    with urllib.request.urlopen(req, timeout=120) as r:
+        dados, tipo = r.read(), r.headers.get("Content-Type", "")
+    if tipo.startswith("image/"):
+        destino.write_bytes(dados)
+        return destino
+    resposta = json.loads(dados)
+    imagem = (resposta.get("result") or {}).get("image")
+    if not imagem:
+        raise RuntimeError(f"Cloudflare sem imagem: {str(resposta)[:300]}")
+    destino.write_bytes(base64.b64decode(imagem))
+    return destino
+
+
+_pexels_usadas: set[int] = set()
+
+
+def _imagem_pexels(prompt: str, destino: Path, busca: str | None = None) -> Path:
+    """Foto real do Pexels (grátis), buscada pelas palavras-chave da cena."""
+    import json
+    import random
+
+    termo = busca or " ".join(prompt.replace(",", " ").split()[:4])
+    url = ("https://api.pexels.com/v1/search?" + urllib.parse.urlencode(
+        {"query": termo, "orientation": "portrait", "per_page": 15}))
+    dados, _ = _baixar(url, {"Authorization": config.PEXELS_API_KEY}, timeout=30)
+    fotos = [f for f in json.loads(dados).get("photos", []) if f["id"] not in _pexels_usadas]
+    if not fotos:
+        raise RuntimeError(f"Pexels sem foto para '{termo}'")
+    foto = random.choice(fotos[:5])
+    _pexels_usadas.add(foto["id"])
+    imagem, _ = _baixar(foto["src"]["large2x"])
+    destino.write_bytes(imagem)
+    return destino
+
+
+def _provedores_imagem() -> list:
+    disponiveis = {
+        "cloudflare": (_imagem_cloudflare, bool(config.CLOUDFLARE_ACCOUNT_ID and config.CLOUDFLARE_API_TOKEN)),
+        "pexels": (_imagem_pexels, bool(config.PEXELS_API_KEY)),
+        "openai": (lambda p, d, b=None: _imagem_openai(p, d), bool(config.OPENAI_API_KEY)),
+        "pollinations": (lambda p, d, b=None: _imagem_pollinations(p, d), True),
+    }
+    ordem = [n.strip() for n in config.IMAGE_PROVIDER.split(",") if n.strip()]
+    lista = [(n, disponiveis[n][0]) for n in ordem if n in disponiveis and disponiveis[n][1]]
+    if not lista:
+        raise RuntimeError(
+            "Nenhuma fonte de imagem configurada. Coloque CLOUDFLARE_ACCOUNT_ID + "
+            "CLOUDFLARE_API_TOKEN e/ou PEXELS_API_KEY."
+        )
+    return lista
+
+
+usou_pexels = False
+
+
+def gerar_imagem(prompt: str, destino: Path, busca: str | None = None) -> Path:
+    """Tenta cada fonte de imagem em ordem (IMAGE_PROVIDER); se uma falhar, usa a próxima."""
+    global usou_pexels
+    ultimo = None
+    for nome, func in _provedores_imagem():
+        try:
+            resultado = _com_retry(func, prompt, destino, busca, tentativas=2)
+            if nome == "pexels":
+                usou_pexels = True
+            return resultado
+        except Exception as e:  # noqa: BLE001
+            ultimo = e
+            print(f"[midia] imagem via {nome} falhou ({str(e)[:150]}); tentando a próxima fonte")
+    raise RuntimeError(f"Nenhuma fonte de imagem funcionou. Último erro: {ultimo}")
 
 
 # ---------------------------------------------------------------- narração
