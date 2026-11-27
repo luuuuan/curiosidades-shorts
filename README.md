@@ -123,6 +123,32 @@ Isso também evita que o GitHub pause o agendamento (ele pausa repositório para
 
 > O agendamento do GitHub pode atrasar alguns minutos em horário de pico. É normal.
 
+## 6. Resposta na hora (Worker da Cloudflare)
+
+Sem isso, o robô confere o Telegram de 15 em 15 minutos. Com o Worker, cada clique ou
+resposta dispara a revisão na hora.
+
+1. **Token do GitHub:** GitHub → Settings (do perfil) → Developer settings → Personal access
+   tokens → **Fine-grained tokens** → Generate new token. Repository access: só este
+   repositório. Permissions → Repository → **Contents: Read and write**. Copie o token.
+2. **Worker:** no painel da Cloudflare, Compute → **Workers & Pages** → Create → Start with
+   Hello World → Deploy. Depois **Edit code**, apague tudo, cole o conteúdo de
+   `cloudflare-worker/worker.js` e clique em **Deploy**. Anote o endereço
+   (`https://....workers.dev`).
+3. **Variáveis do Worker** (Settings → Variables and Secrets, tipo Secret):
+   `GITHUB_TOKEN`, `GITHUB_REPO` (ex.: `luuuuan/curiosidades-shorts`), `TELEGRAM_CHAT_ID`,
+   `TELEGRAM_BOT_TOKEN`.
+4. **Ligar o Telegram ao Worker** (no PC, com o `TELEGRAM_BOT_TOKEN` no `.env`):
+   ```
+   py configurar_webhook.py https://SEU-WORKER.workers.dev
+   ```
+   Ele mostra uma senha: crie a variável `TELEGRAM_SECRET` no Worker com ela.
+5. Teste: clique em um botão no Telegram. Deve aparecer "Recebido! Processando..." e uma
+   execução nova em Actions → Revisar respostas do Telegram.
+
+`py configurar_webhook.py` mostra o status (e o último erro, se houver).
+`py configurar_webhook.py --desligar` volta para o modo de 15 em 15 minutos.
+
 ## Ajustes (no `.env` ou no workflow)
 
 | Variável | Padrão | O que faz |
