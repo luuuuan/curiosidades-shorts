@@ -14,6 +14,7 @@ from pathlib import Path
 
 import config
 import estado
+import midia
 from midia import gerar_imagem, gerar_narracao
 from roteiro import extrair_regra, gerar_roteiro
 from video import duracao, gerar_legenda, montar_video, tempos_das_cenas
@@ -26,12 +27,15 @@ def produzir(pasta: Path, titulos: list[str], anterior: dict | None = None,
     cenas = roteiro["cenas"]
 
     print(f"[main] gerando {len(cenas)} imagens...")
-    paralelo = 4 if config.IMAGE_PROVIDER == "openai" or config.POLLINATIONS_KEY else 1
-    with ThreadPoolExecutor(max_workers=paralelo) as ex:
+    midia.usou_pexels = False
+    with ThreadPoolExecutor(max_workers=3) as ex:
         imagens = list(ex.map(
-            lambda par: gerar_imagem(par[1]["prompt_imagem"], pasta / f"cena_{par[0]:02d}.png"),
+            lambda par: gerar_imagem(par[1]["prompt_imagem"], pasta / f"cena_{par[0]:02d}.png",
+                                     par[1].get("busca")),
             enumerate(cenas),
         ))
+    if midia.usou_pexels:
+        roteiro["credito_pexels"] = True
 
     print("[main] gerando narração...")
     texto = " ".join(c["narracao"].strip() for c in cenas)
@@ -65,7 +69,10 @@ def youtube():
 
 def postar(video: Path, dados: dict) -> str:
     from youtube_upload import enviar
-    video_id = enviar(youtube(), video, dados["titulo"], dados["descricao"], dados["tags"])
+    descricao = dados["descricao"]
+    if dados.get("credito_pexels"):
+        descricao += "\n\nFotos: Pexels (pexels.com)"
+    video_id = enviar(youtube(), video, dados["titulo"], descricao, dados["tags"])
     return f"https://youtube.com/shorts/{video_id}"
 
 
