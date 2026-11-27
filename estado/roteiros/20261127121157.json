@@ -1,0 +1,45 @@
+{
+  "tema": "O verdadeiro som do relogio Big Ben",
+  "titulo": "O segredo do som do Big Ben",
+  "descricao": "Descubra como o tom iconio do sino do Big Ben e afinado e por que ele e tao unico na Inglaterra.",
+  "tags": [
+    "big ben",
+    "londres",
+    "curiosidades",
+    "historia",
+    "relogio"
+  ],
+  "estilo_voz": "enthusiastic, fast-paced, curious tone",
+  "cenas": [
+    {
+      "narracao": "Voce sabia que o famoso som do Big Ben nao vem do sino que leva esse nome?",
+      "prompt_imagem": "Vertical cinematic shot of the Elizabeth Tower and Big Ben in London at sunset, highly detailed",
+      "busca": "Big Ben London sunset"
+    },
+    {
+      "narracao": "O gigante de mais de treze toneladas tem uma rachadura famosa em sua estrutura.",
+      "prompt_imagem": "Close up macro shot of a massive ancient bronze bell with a visible crack, dramatic lighting, vertical",
+      "busca": "bronze bell crack"
+    },
+    {
+      "narracao": "Para evitar que o dano aumentasse, os engenheiros fizeram uma mudanca engenhosa.",
+      "prompt_imagem": "Vertical shot of antique clock gears and mechanical parts working inside a tower, cinematic",
+      "busca": "clock gears mechanism"
+    },
+    {
+      "narracao": "O martelo que bate nele foi trocado por um modelo muito mais leve.",
+      "prompt_imagem": "Vertical image of a metal clock hammer resting near a large bronze bell, detailed workshop",
+      "busca": "clock bell hammer"
+    },
+    {
+      "narracao": "E alem disso, uma moeda e usada ate hoje para ajustar a sua precisao exata.",
+      "prompt_imagem": "Vertical macro shot of an old British coin resting on a golden metallic clock pendulum",
+      "busca": "british coin clock pendulum"
+    },
+    {
+      "narracao": "Gostou do fato? Siga o canal para descobrir mais curiosidades fascinantes todos os dias.",
+      "prompt_imagem": "Vertical cinematic abstract background of glowing time and gears, mysterious and engaging",
+      "busca": "time abstract background"
+    }
+  ]
+}
