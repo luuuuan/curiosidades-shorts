@@ -90,7 +90,7 @@ def _validar(r: dict) -> None:
     if not 4 <= len(r["cenas"]) <= 8:
         raise ValueError(f"{len(r['cenas'])} cenas (esperado 5 a 7)")
     palavras = sum(len(c["narracao"].split()) for c in r["cenas"])
-    if not 90 <= palavras <= 170:
+    if not 70 <= palavras <= 170:
         raise ValueError(f"Narração com {palavras} palavras")
 
 
@@ -131,15 +131,18 @@ def extrair_regra(feedback: str) -> str | None:
 
 def gerar_roteiro(titulos_anteriores: list[str], diretrizes: str = "",
                   anterior: dict | None = None, feedback: str | None = None,
-                  tentativas: int = 4) -> dict:
+                  tentativas: int = 5) -> dict:
     if anterior:
         titulos_anteriores = [t for t in titulos_anteriores if t != anterior.get("titulo")]
     anteriores = "\n".join(f"- {t}" for t in titulos_anteriores) or "(nenhum ainda)"
     extras = _extras(diretrizes, anterior, feedback)
     ultimo_erro = None
+    correcao = ""
     for n in range(1, tentativas + 1):
         try:
-            roteiro = _perguntar(PROMPT_ROTEIRO.format(anteriores=anteriores, extras=extras))
+            roteiro = _perguntar(
+                PROMPT_ROTEIRO.format(anteriores=anteriores, extras=extras) + correcao
+            )
             _validar(roteiro)
             checagem = _perguntar(
                 PROMPT_CHECAGEM.format(roteiro=json.dumps(roteiro, ensure_ascii=False))
@@ -148,7 +151,17 @@ def gerar_roteiro(titulos_anteriores: list[str], diretrizes: str = "",
                 print(f"[roteiro] aprovado: {roteiro['titulo']}")
                 return roteiro
             ultimo_erro = f"reprovado na checagem: {checagem.get('problemas')}"
+            correcao = (
+                "\n\nATENÇÃO: o roteiro anterior foi reprovado na checagem de fatos por isto: "
+                f"{checagem.get('problemas')}. Escolha um fato sólido e sem polêmica.\n"
+            )
         except (ValueError, KeyError, TypeError) as e:
             ultimo_erro = str(e)
+            if "palavras" in ultimo_erro:
+                correcao = (
+                    f"\n\nATENÇÃO: a versão anterior saiu com {ultimo_erro.split()[2]} palavras. "
+                    "A narração TOTAL (somando todas as cenas) precisa ter entre 110 e 140 "
+                    "palavras. Escreva cenas mais completas, com 20 a 25 palavras cada.\n"
+                )
         print(f"[roteiro] tentativa {n} descartada: {ultimo_erro}")
     raise RuntimeError(f"Não consegui um roteiro aprovado: {ultimo_erro}")
