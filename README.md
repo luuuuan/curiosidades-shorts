@@ -22,6 +22,9 @@ Se a voz do Gemini falhar ou bater o limite, o edge-tts entra no lugar automatic
   - `CLOUDFLARE_API_TOKEN`: **Workers AI → Use REST API → Create a Workers AI API Token**.
 - **Pexels (fotos reais, grátis, reserva):** crie conta em pexels.com/api e peça a chave
   (`PEXELS_API_KEY`). Quando o vídeo usa foto do Pexels, o crédito entra na descrição.
+- **Clipes de vídeo reais (opcional, grátis):** crie conta em pixabay.com, pegue a chave em
+  pixabay.com/api/docs e salve como `PIXABAY_API_KEY`. As cenas que dão pra filmar viram
+  vídeo de verdade; o resto continua imagem de IA com movimento. Sem a chave, só imagens.
 
 Precisa de pelo menos uma das duas fontes de imagem; com as duas, se uma falhar, a outra assume.
 
@@ -108,6 +111,7 @@ respondeu.
    - `YT_REFRESH_TOKEN`
    - `CLOUDFLARE_ACCOUNT_ID` e `CLOUDFLARE_API_TOKEN`
    - `PEXELS_API_KEY`
+   - `PIXABAY_API_KEY`
 3. Aba **Actions** → libere os workflows se o GitHub pedir.
 4. Para testar na hora: **Actions → Gerar Short → Run workflow**. Clique na execução para
    ver o log. Em poucos minutos o vídeo chega no Telegram.

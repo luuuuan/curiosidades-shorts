@@ -83,6 +83,9 @@ CLOUDFLARE_IMAGE_MODEL = _env("CLOUDFLARE_IMAGE_MODEL", "@cf/black-forest-labs/f
 # Pexels (fotos reais grátis): chave em pexels.com/api
 PEXELS_API_KEY = _env("PEXELS_API_KEY", "")
 
+# Pixabay (vídeos reais grátis, sem crédito obrigatório): chave em pixabay.com/api/docs
+PIXABAY_API_KEY = _env("PIXABAY_API_KEY", "")
+
 # Pollinations (só funciona com saldo hoje). Chave opcional em enter.pollinations.ai: tira o limite de 15s
 POLLINATIONS_KEY = _env("POLLINATIONS_KEY", "")
 POLLINATIONS_MODEL = _env("POLLINATIONS_MODEL", "flux")

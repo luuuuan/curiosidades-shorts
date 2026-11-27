@@ -1,4 +1,5 @@
-"""Monta o Short (1080x1920) com FFmpeg: imagens com zoom, narração e legenda."""
+"""Monta o Short (1080x1920) com FFmpeg: clipes reais e imagens com movimento, transições,
+narração e legenda."""
 import json
 import subprocess
 from pathlib import Path
@@ -37,21 +38,51 @@ def tempos_das_cenas(cenas: list[dict], palavras: list[tuple], duracao_total: fl
     return duracoes
 
 
-def _clipe(imagem: Path, segundos: float, destino: Path, zoom_in: bool) -> None:
+TRANSICAO = 0.3  # segundos de transição entre cenas
+_TRANSICOES = ["fade", "smoothup", "smoothleft", "zoomin", "fade", "smoothright"]
+_MOVIMENTOS = ["zoom_in", "pan_direita", "zoom_out", "pan_cima", "pan_esquerda"]
+
+
+def _clipe(imagem: Path, segundos: float, destino: Path, movimento: str) -> None:
+    """Imagem parada vira clipe com movimento (zoom ou deslizar)."""
     frames = max(int(round(segundos * FPS)), 1)
-    if zoom_in:
-        z = "min(1+0.18*on/{f},1.18)".format(f=frames)
-    else:
-        z = "max(1.18-0.18*on/{f},1)".format(f=frames)
+    t = f"on/{frames}"
+    x_meio, y_meio = "iw/2-(iw/zoom/2)", "ih/2-(ih/zoom/2)"
+    z, x, y = "1.15", x_meio, y_meio
+    if movimento == "zoom_in":
+        z = f"1+0.2*{t}"
+    elif movimento == "zoom_forte":
+        z = f"1+0.3*{t}"
+    elif movimento == "zoom_out":
+        z = f"1.2-0.2*{t}"
+    elif movimento == "pan_direita":
+        x = f"(iw-iw/zoom)*{t}"
+    elif movimento == "pan_esquerda":
+        x = f"(iw-iw/zoom)*(1-{t})"
+    elif movimento == "pan_cima":
+        y = f"(ih-ih/zoom)*(1-{t})"
     filtro = (
         f"scale={LARGURA * 2}:{ALTURA * 2}:force_original_aspect_ratio=increase,"
         f"crop={LARGURA * 2}:{ALTURA * 2},"
-        f"zoompan=z='{z}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+        f"zoompan=z='{z}':x='{x}':y='{y}'"
         f":d={frames}:s={LARGURA}x{ALTURA}:fps={FPS},setsar=1,format=yuv420p"
     )
     _rodar([
         "ffmpeg", "-y", "-i", str(imagem), "-vf", filtro, "-frames:v", str(frames),
         "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-an", str(destino),
+    ])
+
+
+def _clipe_video(origem: Path, segundos: float, destino: Path) -> None:
+    """Clipe real recortado em 9:16 no tamanho da cena (repete se for curto)."""
+    filtro = (
+        f"scale={LARGURA}:{ALTURA}:force_original_aspect_ratio=increase,"
+        f"crop={LARGURA}:{ALTURA},fps={FPS},setsar=1,format=yuv420p"
+    )
+    _rodar([
+        "ffmpeg", "-y", "-stream_loop", "-1", "-i", str(origem), "-t", f"{segundos:.3f}",
+        "-vf", filtro, "-c:v", "libx264", "-preset", "veryfast", "-crf", "21", "-an",
+        str(destino),
     ])
 
 
@@ -98,24 +129,40 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     return destino
 
 
-def montar_video(imagens: list[Path], duracoes: list[float], audio: Path,
+def montar_video(visuais: list[Path], duracoes: list[float], audio: Path,
                  legenda: Path, destino: Path, pasta: Path) -> Path:
+    n = len(visuais)
     clipes = []
-    for i, (img, seg) in enumerate(zip(imagens, duracoes)):
+    for i, (vis, seg) in enumerate(zip(visuais, duracoes)):
+        # cada cena (menos a última) ganha a sobra que a transição "come"
+        seg_total = seg + (TRANSICAO if i < n - 1 else 0)
         clipe = pasta / f"clipe_{i:02d}.mp4"
-        _clipe(img, seg, clipe, zoom_in=(i % 2 == 0))
+        if vis.suffix.lower() in (".mp4", ".mov", ".webm"):
+            _clipe_video(vis, seg_total, clipe)
+        else:
+            movimento = "zoom_forte" if i == 0 else _MOVIMENTOS[i % len(_MOVIMENTOS)]
+            _clipe(vis, seg_total, clipe, movimento)
         clipes.append(clipe)
 
-    lista = pasta / "clipes.txt"
-    lista.write_text("".join(f"file '{c.resolve()}'\n" for c in clipes))
-    sem_audio = pasta / "sem_audio.mp4"
-    _rodar(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(lista),
-            "-c", "copy", str(sem_audio)])
-
+    entradas, partes = [], []
+    for i, c in enumerate(clipes):
+        entradas += ["-i", str(c)]
+        partes.append(f"[{i}:v]settb=AVTB,setpts=PTS-STARTPTS,fps={FPS},format=yuv420p[v{i}]")
+    atual, offset = "[v0]", 0.0
+    for i in range(1, n):
+        offset += duracoes[i - 1]
+        saida = f"[x{i}]"
+        partes.append(
+            f"{atual}[v{i}]xfade=transition={_TRANSICOES[i % len(_TRANSICOES)]}"
+            f":duration={TRANSICAO}:offset={offset:.3f}{saida}"
+        )
+        atual = saida
     legenda_esc = str(legenda.resolve()).replace("\\", "/").replace(":", "\\:")
+    partes.append(f"{atual}ass='{legenda_esc}'[final]")
+
     _rodar([
-        "ffmpeg", "-y", "-i", str(sem_audio), "-i", str(audio),
-        "-vf", f"ass='{legenda_esc}'",
+        "ffmpeg", "-y", *entradas, "-i", str(audio),
+        "-filter_complex", ";".join(partes), "-map", "[final]", "-map", f"{n}:a",
         "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", "160k", "-shortest", "-movflags", "+faststart",
         str(destino),

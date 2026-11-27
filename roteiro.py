@@ -3,6 +3,7 @@
 LLM_PROVIDER=gemini (padrão, tem camada grátis) ou claude (pago).
 """
 import json
+import random
 
 import config
 
@@ -14,12 +15,24 @@ Regras:
 - Evite saúde/medicina, política, religião, tragédias recentes e pessoas reais vivas.
 - Varie a área: ciência, animais, espaço, história, geografia, corpo humano (sem conselho
   médico), tecnologia, idiomas, comida, objetos do dia a dia.
-- Narração total entre 110 e 140 palavras (uns 45 a 55 segundos).
-- A primeira cena é o gancho: uma frase curta que prende nos 2 primeiros segundos.
-- A última cena fecha a explicação e termina com um convite curto para seguir o canal.
+- Narração total entre 75 e 105 palavras (uns 30 a 40 segundos). Curto e denso, sem enrolação.
+- FORMATO deste vídeo: {formato}
+- GANCHO (cena 1): no máximo 12 palavras, já com a parte mais chocante do fato. Proibido
+  começar com 'Você sabia', 'Olá', 'Hoje', 'Neste vídeo', 'Vamos' ou qualquer apresentação.
+  Bons exemplos: 'Existe um animal que nunca morre de velhice.' / 'O Brasil já teve dois
+  imperadores e nenhum nasceu aqui.'
+- Cada cena seguinte traz uma informação nova que aumenta a curiosidade; nada de repetir.
+- FINAL EM LOOP: a última frase deve emendar naturalmente com a primeira, como se o vídeo
+  recomeçasse (ex.: termina com '...e é por isso que' e o gancho completa a ideia). NÃO
+  termine pedindo para seguir, curtir ou comentar.
 - Linguagem falada, frases curtas, sem emoji, sem hashtag na narração.
-- Entre 5 e 7 cenas. Cada cena tem a narração e um prompt de imagem EM INGLÊS: imagem vertical,
+- Entre 4 e 6 cenas. Cada cena tem a narração e um prompt de imagem EM INGLÊS: imagem vertical,
   cinematográfica, detalhada, SEM texto escrito, sem logotipos, sem pessoas famosas.
+- Em cada cena escolha o "visual":
+  "video" quando dá para mostrar com uma filmagem real e genérica de banco de vídeos
+  (natureza, animais, oceano, espaço, cidade, comida, pessoas fazendo algo comum, objetos);
+  "imagem" quando a cena é específica demais, histórica, impossível de filmar ou precisa de
+  ilustração. Use "video" em pelo menos metade das cenas quando o tema permitir.
 - Dentro dos textos, use aspas simples (') em vez de aspas duplas.
 
 NÃO repita nenhum destes temas já publicados:
@@ -33,10 +46,20 @@ Responda SOMENTE com JSON válido neste formato:
   "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
   "estilo_voz": "how the narrator should sound, IN ENGLISH (energy, pace, tone)",
   "cenas": [
-    {{"narracao": "texto falado da cena", "prompt_imagem": "english image prompt",
-      "busca": "2-3 english keywords to find a real stock photo of this scene"}}
+    {{"narracao": "texto falado da cena", "visual": "video ou imagem",
+      "prompt_imagem": "english image prompt",
+      "busca": "2-3 simple english keywords to find real stock footage of this scene"}}
   ]
 }}"""
+
+FORMATOS = [
+    "FATO ÚNICO: um fato surpreendente explicado do gancho ao porquê.",
+    "3 FATOS: três curiosidades curtas sobre o mesmo assunto, da menos para a mais chocante.",
+    "MITO OU VERDADE: uma crença popular, o suspense e a resposta com o fato real.",
+    "E SE...: o que aconteceria se algo mudasse, usando só ciência real e bem aceita.",
+    "ORIGEM: de onde veio algo do dia a dia (palavra, objeto, costume) — história verificada.",
+    "COMPARAÇÃO: dois números ou tamanhos reais comparados de um jeito visual e surpreendente.",
+]
 
 PROMPT_CHECAGEM = """Você é um checador de fatos rigoroso. Verifique se TODAS as afirmações do
 roteiro abaixo são verdadeiras, precisas e bem estabelecidas (sem exagero, sem número errado,
@@ -87,11 +110,18 @@ def _validar(r: dict) -> None:
     for campo in ("tema", "titulo", "descricao", "tags", "cenas"):
         if campo not in r:
             raise ValueError(f"Roteiro sem o campo {campo}")
-    if not 4 <= len(r["cenas"]) <= 8:
-        raise ValueError(f"{len(r['cenas'])} cenas (esperado 5 a 7)")
+    if not 3 <= len(r["cenas"]) <= 7:
+        raise ValueError(f"{len(r['cenas'])} cenas (esperado 4 a 6)")
     palavras = sum(len(c["narracao"].split()) for c in r["cenas"])
-    if not 70 <= palavras <= 170:
+    if not 60 <= palavras <= 120:
         raise ValueError(f"Narração com {palavras} palavras")
+    gancho = len(r["cenas"][0]["narracao"].split())
+    if gancho > 16:
+        raise ValueError(f"Gancho com {gancho} palavras (máximo 12)")
+    inicio = r["cenas"][0]["narracao"].strip().lower()
+    for proibido in ("você sabia", "voce sabia", "olá", "ola,", "hoje", "neste vídeo", "vamos"):
+        if inicio.startswith(proibido):
+            raise ValueError(f"Gancho começa com '{proibido}'")
 
 
 def _extras(diretrizes: str, anterior: dict | None, feedback: str | None) -> str:
@@ -136,18 +166,23 @@ def gerar_roteiro(titulos_anteriores: list[str], diretrizes: str = "",
         titulos_anteriores = [t for t in titulos_anteriores if t != anterior.get("titulo")]
     anteriores = "\n".join(f"- {t}" for t in titulos_anteriores) or "(nenhum ainda)"
     extras = _extras(diretrizes, anterior, feedback)
+    formato = random.choice(FORMATOS)
+    if anterior and anterior.get("formato"):
+        formato = next((f for f in FORMATOS if f.startswith(anterior["formato"].upper())), formato)
+    print(f"[roteiro] formato: {formato.split(':')[0]}")
     ultimo_erro = None
     correcao = ""
     for n in range(1, tentativas + 1):
         try:
             roteiro = _perguntar(
-                PROMPT_ROTEIRO.format(anteriores=anteriores, extras=extras) + correcao
+                PROMPT_ROTEIRO.format(anteriores=anteriores, extras=extras, formato=formato) + correcao
             )
             _validar(roteiro)
             checagem = _perguntar(
                 PROMPT_CHECAGEM.format(roteiro=json.dumps(roteiro, ensure_ascii=False))
             )
             if checagem.get("aprovado"):
+                roteiro["formato"] = formato.split(":")[0]
                 print(f"[roteiro] aprovado: {roteiro['titulo']}")
                 return roteiro
             ultimo_erro = f"reprovado na checagem: {checagem.get('problemas')}"
@@ -157,11 +192,16 @@ def gerar_roteiro(titulos_anteriores: list[str], diretrizes: str = "",
             )
         except (ValueError, KeyError, TypeError) as e:
             ultimo_erro = str(e)
-            if "palavras" in ultimo_erro:
+            if ultimo_erro.startswith("Narração"):
                 correcao = (
                     f"\n\nATENÇÃO: a versão anterior saiu com {ultimo_erro.split()[2]} palavras. "
-                    "A narração TOTAL (somando todas as cenas) precisa ter entre 110 e 140 "
-                    "palavras. Escreva cenas mais completas, com 20 a 25 palavras cada.\n"
+                    "A narração TOTAL (somando todas as cenas) precisa ter entre 75 e 105 "
+                    "palavras.\n"
+                )
+            elif ultimo_erro.startswith("Gancho"):
+                correcao = (
+                    f"\n\nATENÇÃO: a versão anterior foi descartada: {ultimo_erro}. A cena 1 "
+                    "precisa ter no máximo 12 palavras e ir direto ao fato chocante.\n"
                 )
         print(f"[roteiro] tentativa {n} descartada: {ultimo_erro}")
     raise RuntimeError(f"Não consegui um roteiro aprovado: {ultimo_erro}")

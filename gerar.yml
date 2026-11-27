@@ -1,0 +1,73 @@
+name: Gerar Short
+
+on:
+  schedule:
+    # Horário em UTC: 14h e 22h UTC = 11h e 19h em Brasília
+    - cron: "0 07,11,16,20 * * *"  # 04h, 08h, 13h e 17h de Brasília
+  workflow_dispatch: # botão "Run workflow" para gerar na hora
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gerar
+  cancel-in-progress: false
+
+jobs:
+  gerar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      PYTHONUNBUFFERED: "1" # mostra o log em tempo real
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar FFmpeg e fonte
+        run: |
+          # o repositório da Microsoft no runner às vezes dá 403 e derruba o apt-get update
+          sudo rm -f /etc/apt/sources.list.d/microsoft*.list /etc/apt/sources.list.d/microsoft*.sources
+          sudo apt-get update || true
+          sudo apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt faster-whisper
+
+      - name: Cache do modelo Whisper
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: whisper-base
+
+      - name: Gerar e mandar pro Telegram
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          YT_PRIVACY: public
+          VIDEOS_POR_EXECUCAO: "1"
+        run: python main.py gerar
+
+      # Salva o roteiro no repositório. Também evita que o GitHub pause o
+      # agendamento por falta de atividade (ele faz isso após 60 dias parado).
+      - name: Salvar estado
+        if: always()
+        run: |
+          mkdir -p .github && date -u +"%Y-%m-%d %H:%M UTC" > .github/ultima_execucao.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898169+github-actions[bot]@users.noreply.github.com"
+          git add -A estado .github/ultima_execucao.txt 2>/dev/null || true
+          git diff --cached --quiet && exit 0
+          git commit -m "Robô: novo vídeo gerado"
+          for i in 1 2 3; do git pull --rebase && git push && break; sleep 5; done

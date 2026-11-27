@@ -154,6 +154,54 @@ def _imagem_pexels(prompt: str, destino: Path, busca: str | None = None) -> Path
     return destino
 
 
+# ---------------------------------------------------------------- clipes de vídeo
+_pixabay_usados: set = set()
+_trava_pixabay = __import__("threading").Lock()
+
+
+def buscar_clipe(busca: str, destino: Path) -> Path:
+    """Baixa um clipe real do Pixabay (grátis) para a cena. Levanta erro se não achar."""
+    import json
+    import random
+
+    if not config.PIXABAY_API_KEY:
+        raise RuntimeError("sem PIXABAY_API_KEY")
+    url = "https://pixabay.com/api/videos/?" + urllib.parse.urlencode({
+        "key": config.PIXABAY_API_KEY, "q": busca[:100], "per_page": 20,
+        "safesearch": "true", "video_type": "film",
+    })
+    dados, _ = _baixar(url, timeout=30)
+    hits = [h for h in json.loads(dados).get("hits", []) if h.get("duration", 0) >= 4]
+    with _trava_pixabay:
+        livres = [h for h in hits if h["id"] not in _pixabay_usados]
+        if not livres:
+            raise RuntimeError(f"Pixabay sem clipe para '{busca}'")
+        # prefere clipes em pé (ficam melhores em 9:16) e depois os mais bem avaliados
+        livres.sort(key=lambda h: (h["videos"]["medium"]["height"] < h["videos"]["medium"]["width"],
+                                   -h.get("likes", 0)))
+        hit = random.choice(livres[:4])
+        _pixabay_usados.add(hit["id"])
+    versoes = hit["videos"]
+    escolha = next((versoes[k] for k in ("large", "medium", "small")
+                    if versoes.get(k, {}).get("url") and versoes[k].get("size", 0) < 60_000_000), None)
+    if not escolha:
+        raise RuntimeError("clipe do Pixabay sem versão baixável")
+    conteudo, _ = _baixar(escolha["url"], timeout=120)
+    destino.write_bytes(conteudo)
+    print(f"[midia] clipe Pixabay #{hit['id']} para '{busca}' ({escolha['width']}x{escolha['height']})")
+    return destino
+
+
+def visual_da_cena(cena: dict, pasta: Path, n: int) -> Path:
+    """Clipe real quando a cena pede vídeo e o Pixabay tem; senão, imagem de IA."""
+    if cena.get("visual") == "video" and config.PIXABAY_API_KEY and cena.get("busca"):
+        try:
+            return _com_retry(buscar_clipe, cena["busca"], pasta / f"cena_{n:02d}.mp4", tentativas=2)
+        except Exception as e:  # noqa: BLE001
+            print(f"[midia] cena {n}: sem clipe ({config.ocultar(e)[:120]}); usando imagem")
+    return gerar_imagem(cena["prompt_imagem"], pasta / f"cena_{n:02d}.png", cena.get("busca"))
+
+
 def _provedores_imagem() -> list:
     disponiveis = {
         "cloudflare": (_imagem_cloudflare, bool(config.CLOUDFLARE_ACCOUNT_ID and config.CLOUDFLARE_API_TOKEN)),
