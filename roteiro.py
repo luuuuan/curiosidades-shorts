@@ -33,7 +33,8 @@ Responda SOMENTE com JSON válido neste formato:
   "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
   "estilo_voz": "how the narrator should sound, IN ENGLISH (energy, pace, tone)",
   "cenas": [
-    {{"narracao": "texto falado da cena", "prompt_imagem": "english image prompt"}}
+    {{"narracao": "texto falado da cena", "prompt_imagem": "english image prompt",
+      "busca": "2-3 english keywords to find a real stock photo of this scene"}}
   ]
 }}"""
 
