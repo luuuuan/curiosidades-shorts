@@ -1,0 +1,45 @@
+{
+  "tema": "O tempo de duracao de um dia em Venus",
+  "titulo": "Um dia em Vênus dura mais que um ano lá!",
+  "descricao": "Descubra como funciona a rotação curiosa do planeta Vênus, onde o movimento de rotação é tão lento que demora mais tempo para o planeta girar em torno de seu próprio eixo do que para dar uma volta completa ao redor do Sol.",
+  "tags": [
+    "venus",
+    "astronomia",
+    "espacio",
+    "curiosidades",
+    "ciencia"
+  ],
+  "estilo_voz": "Warm, engaging, and slightly mysterious human voice, medium-fast pace to build curiosity",
+  "cenas": [
+    {
+      "narracao": "Você sabia que em Vênus um dia é mais longo que um ano?",
+      "prompt_imagem": "Vertical cinematic shot of the planet Venus shining brightly in the dark deep space, highly detailed 8k",
+      "busca": "venus planet space"
+    },
+    {
+      "narracao": "Isso acontece porque o planeta gira muito devagar em torno do seu próprio eixo.",
+      "prompt_imagem": "Vertical 3D render of planet Venus rotating slowly with realistic clouds and thick atmosphere, cinematic lighting",
+      "busca": "venus rotation space"
+    },
+    {
+      "narracao": "Enquanto a Terra dá uma volta completa a cada vinte e quatro horas...",
+      "prompt_imagem": "Vertical cinematic view of planet Earth spinning gracefully in the dark void of space, highly detailed",
+      "busca": "earth from space"
+    },
+    {
+      "narracao": "...Vênus leva duzentos e quarenta e três dias terrestres para completar apenas uma rotação.",
+      "prompt_imagem": "Vertical digital art showing time passing on a desolate alien rocky planet with intense heat haze",
+      "busca": "alien planet landscape"
+    },
+    {
+      "narracao": "Mas ao mesmo tempo, ele viaja ao redor do Sol em duzentos e vinte e cinco dias.",
+      "prompt_imagem": "Vertical cinematic shot of planet Venus orbiting around a glowing distant Sun, realistic astronomy art",
+      "busca": "planet orbit sun"
+    },
+    {
+      "narracao": "Ou seja, lá você comemoraria aniversário antes mesmo de terminar o dia. Curtiu? Então siga o canal para mais fatos incríveis.",
+      "prompt_imagem": "Vertical close-up of a futuristic glowing calendar or clock floating in deep space, mysterious atmosphere",
+      "busca": "futuristic clock space"
+    }
+  ]
+}
