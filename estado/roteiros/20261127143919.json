@@ -1,0 +1,40 @@
+{
+  "tema": "A Grande Muralha da China não pode ser vista do espaço a olho nu",
+  "titulo": "A Muralha da China é visível do espaço?",
+  "descricao": "Muitos acreditam que a Grande Muralha da China pode ser vista do espaço a olho nu. No entanto, astronautas já provaram que isso é um mito, pois a estrutura se mistura com a cor da paisagem natural.",
+  "tags": [
+    "muralhadachina",
+    "espacio",
+    "mitouverdade",
+    "curiosidades",
+    "ciencia"
+  ],
+  "estilo_voz": "Curious, suspenseful, engaging and conversational tone, medium pace with a slightly mysterious inflection",
+  "cenas": [
+    {
+      "narracao": "A Grande Muralha da China pode ser vista do espaço a olho nu.",
+      "visual": "imagem",
+      "prompt_imagem": "Realistic cinematic view of the Great Wall of China winding across green mountains, highly detailed, vertical format",
+      "busca": "great wall of china"
+    },
+    {
+      "narracao": "Essa famosa crença foi ensinada por gerações nas escolas de quase todo o mundo, criando um enorme mito global.",
+      "visual": "imagem",
+      "prompt_imagem": "Realistic vintage classroom chalkboard with a drawing of the earth and space, soft warm lighting, vertical format",
+      "busca": "vintage school classroom"
+    },
+    {
+      "narracao": "Contudo, astronautas reais confirmaram que a estrutura é extremamente estreita e impossível de ser localizada sem ajuda de lentes.",
+      "visual": "video",
+      "prompt_imagem": "Cinematic view of planet earth from space orbit, photorealistic, highly detailed, vertical format",
+      "busca": "earth from space"
+    },
+    {
+      "narracao": "Ela se camufla perfeitamente com os tons naturais da terra e das rochas ao redor, e é por isso que",
+      "visual": "video",
+      "prompt_imagem": "Close up realistic shot of natural grey mountain rocks and green soil texture, vertical format",
+      "busca": "mountain rock texture"
+    }
+  ],
+  "formato": "MITO OU VERDADE"
+}
