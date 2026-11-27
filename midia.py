@@ -173,8 +173,8 @@ def gerar_imagem(prompt: str, destino: Path, busca: str | None = None) -> Path:
             return resultado
         except Exception as e:  # noqa: BLE001
             ultimo = e
-            print(f"[midia] imagem via {nome} falhou ({str(e)[:150]}); tentando a próxima fonte")
-    raise RuntimeError(f"Nenhuma fonte de imagem funcionou. Último erro: {ultimo}")
+            print(f"[midia] imagem via {nome} falhou ({config.ocultar(e)[:150]}); tentando a próxima fonte")
+    raise RuntimeError(f"Nenhuma fonte de imagem funcionou. Último erro: {config.ocultar(ultimo)}")
 
 
 # ---------------------------------------------------------------- narração
