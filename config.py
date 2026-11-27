@@ -19,8 +19,16 @@ def _carregar_env() -> None:
 _carregar_env()
 
 
+_SEGREDOS: list[str] = []
+
+
 def _env(nome: str, padrao: str | None = None, obrigatoria: bool = False) -> str | None:
     valor = os.getenv(nome, padrao)
+    if isinstance(valor, str):
+        # tira espaços e quebras de linha coladas sem querer junto com a chave
+        valor = valor.strip()
+        if any(p in nome for p in ("KEY", "TOKEN", "SECRET")) and len(valor) >= 8:
+            _SEGREDOS.append(valor)
     if obrigatoria and not valor:
         raise RuntimeError(f"Variável de ambiente {nome} não configurada")
     return valor
@@ -87,8 +95,8 @@ EDGE_RATE = _env("EDGE_RATE", "+10%")
 OPENAI_API_KEY = _env(
     "OPENAI_API_KEY", obrigatoria=IMAGE_PROVIDER == "openai" or TTS_PROVIDER == "openai"
 )
-OPENAI_IMAGE_MODEL = _env("OPENAI_IMAGE_MODEL", "gpt-image-1")
-OPENAI_IMAGE_QUALITY = _env("OPENAI_IMAGE_QUALITY", "medium")  # low | medium | high
+OPENAI_IMAGE_MODEL = _env("OPENAI_IMAGE_MODEL", "gpt-image-2.5-flare")  # gpt-image-1 foi desligado em out/2026
+OPENAI_IMAGE_QUALITY = _env("OPENAI_IMAGE_QUALITY", "low")  # low | medium | high
 TTS_MODEL = _env("TTS_MODEL", "gpt-4o-mini-tts")
 TTS_VOICE = _env("TTS_VOICE", "onyx")
 TTS_INSTRUCOES = _env(
@@ -111,3 +119,11 @@ APROVACAO = bool(TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID)
 
 # Quantos vídeos cada execução do cron produz
 VIDEOS_POR_EXECUCAO = int(_env("VIDEOS_POR_EXECUCAO", "1"))
+
+
+def ocultar(texto: str) -> str:
+    """Troca qualquer chave/token por *** antes de mostrar um erro (log ou Telegram)."""
+    texto = str(texto)
+    for segredo in _SEGREDOS:
+        texto = texto.replace(segredo, "***")
+    return texto
