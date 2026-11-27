@@ -101,8 +101,8 @@ def _imagem_cloudflare(prompt: str, destino: Path, busca: str | None = None) -> 
 
     url = (f"https://api.cloudflare.com/client/v4/accounts/{config.CLOUDFLARE_ACCOUNT_ID}"
            f"/ai/run/{config.CLOUDFLARE_IMAGE_MODEL}")
-    corpo = json.dumps({"prompt": prompt + ESTILO_IMAGEM, "steps": 6,
-                        "seed": int(time.time() * 1000) % 2_000_000}).encode()
+    # o modelo só aceita "prompt" e "steps"; qualquer campo a mais dá erro 400
+    corpo = json.dumps({"prompt": (prompt + ESTILO_IMAGEM)[:2048], "steps": 6}).encode()
     req = urllib.request.Request(url, data=corpo, headers={
         "Authorization": f"Bearer {config.CLOUDFLARE_API_TOKEN}",
         "Content-Type": "application/json",
