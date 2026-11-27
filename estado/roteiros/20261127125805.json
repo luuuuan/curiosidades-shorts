@@ -1,0 +1,45 @@
+{
+  "tema": "O verdadeiro som do relogio Big Ben",
+  "titulo": "O segredo por tras do som do Big Ben",
+  "descricao": "Descubra como o tom iconico do sino do Big Ben e afinado e por que ele e tao unico em Londres, usando uma simples moeda para ajuste.",
+  "tags": [
+    "big ben",
+    "londres",
+    "curiosidades",
+    "historia",
+    "relogio"
+  ],
+  "estilo_voz": "warm, natural, conversational human voice, calm and engaging tone, moderate pace",
+  "cenas": [
+    {
+      "narracao": "Voce sabia que o famoso som do Big Ben nao vem do sino que leva esse nome?",
+      "prompt_imagem": "Photorealistic vertical street photography of the Elizabeth Tower and Big Ben in London during dusk, natural lighting, highly detailed",
+      "busca": "Big Ben London dusk"
+    },
+    {
+      "narracao": "O gigante de mais de treze toneladas tem uma rachadura famosa em sua estrutura.",
+      "prompt_imagem": "Photorealistic vertical macro shot of a massive ancient bronze bell with a visible crack, natural textures, realistic lighting",
+      "busca": "bronze bell crack"
+    },
+    {
+      "narracao": "Para evitar que o dano aumentasse, os engenheiros fizeram uma mudanca engenhosa.",
+      "prompt_imagem": "Photorealistic vertical shot of antique brass clock gears and mechanical parts working inside a clock tower, documentary style",
+      "busca": "clock gears mechanism"
+    },
+    {
+      "narracao": "O martelo que bate nele foi trocado por um modelo muito mais leve.",
+      "prompt_imagem": "Photorealistic vertical image of a real metal clock hammer resting near a large bronze bell in a workshop",
+      "busca": "clock bell hammer"
+    },
+    {
+      "narracao": "E alem disso, uma moeda antiga e usada ate hoje para ajustar a sua precisao exata.",
+      "prompt_imagem": "Photorealistic vertical macro shot of an old British penny coin resting on a golden metallic clock pendulum",
+      "busca": "british coin clock pendulum"
+    },
+    {
+      "narracao": "Gostou do fato? Siga o canal para descobrir mais curiosidades fascinantes todos os dias.",
+      "prompt_imagem": "Photorealistic vertical cinematic shot of London street at night with soft warm lights and authentic atmosphere",
+      "busca": "London street night"
+    }
+  ]
+}
