@@ -42,7 +42,11 @@ GEMINI_API_KEY = _env(
     "GEMINI_API_KEY", obrigatoria="gemini" in (LLM_PROVIDER, TTS_PROVIDER)
 )
 # Modelos do roteiro, em ordem de preferência (se um travar, usa o próximo)
-GEMINI_MODEL = _env("GEMINI_MODEL", "gemini-flash-lite-latest,gemini-flash-latest")
+GEMINI_MODEL = _env(
+    "GEMINI_MODEL",
+    "gemini-flash-lite-latest,gemini-3.5-flash-lite,gemini-3.1-flash-lite,"
+    "gemini-2.5-flash-lite,gemini-flash-latest,gemini-3.5-flash,gemini-2.5-flash",
+)
 GEMINI_TIMEOUT = int(_env("GEMINI_TIMEOUT", "90"))  # segundos esperando cada resposta
 
 # Claude (só se LLM_PROVIDER=claude)
@@ -51,7 +55,8 @@ CLAUDE_MODEL = _env("CLAUDE_MODEL", "claude-sonnet-5-5")
 
 
 # Voz do Gemini (grátis). Vozes: Puck, Charon, Kore, Fenrir, Orus, Aoede, Zephyr, Leda...
-GEMINI_TTS_MODEL = _env("GEMINI_TTS_MODEL", "gemini-3.8-flash-tts")
+# Modelos de voz em ordem (se todos falharem, usa o edge-tts)
+GEMINI_TTS_MODEL = _env("GEMINI_TTS_MODEL", "gemini-3.8-flash-tts,gemini-3.8-flash-lite-tts")
 GEMINI_TTS_VOICE = _env("GEMINI_TTS_VOICE", "Puck")
 GEMINI_TTS_STYLE = _env(
     "GEMINI_TTS_STYLE",
