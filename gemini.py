@@ -53,31 +53,40 @@ def post(caminho: str, corpo: dict, timeout: int = 180, tentativas: int = 3) -> 
     raise GeminiErro("Gemini não respondeu")
 
 
-def texto(prompt: str, json_saida: bool = True) -> str:
-    """Pede texto ao Gemini. Tenta cada modelo de GEMINI_MODEL (separados por vírgula),
-    com raciocínio reduzido para responder rápido."""
+def _uma_chamada(modelo: str, prompt: str, json_saida: bool) -> str:
+    geracao = {"temperature": 1.0, "thinkingConfig": {"thinkingLevel": "low"}}
+    if json_saida:
+        geracao["responseMimeType"] = "application/json"
+    corpo = {"contents": [{"role": "user", "parts": [{"text": prompt}]}],
+             "generationConfig": geracao}
+    try:
+        dados = post(f"models/{modelo}:generateContent", corpo,
+                     timeout=config.GEMINI_TIMEOUT, tentativas=1)
+    except GeminiErro as e:
+        if e.codigo != 400:
+            raise
+        # modelo não aceita o ajuste de raciocínio: tenta sem ele
+        geracao.pop("thinkingConfig", None)
+        dados = post(f"models/{modelo}:generateContent", corpo,
+                     timeout=config.GEMINI_TIMEOUT, tentativas=1)
+    partes = dados["candidates"][0]["content"]["parts"]
+    return "".join(p.get("text", "") for p in partes if not p.get("thought"))
+
+
+def texto(prompt: str, json_saida: bool = True, voltas: int = 2) -> str:
+    """Pede texto ao Gemini. Passa por cada modelo de GEMINI_MODEL (separados por vírgula):
+    se um estiver ocupado (503), no limite (429), travado ou fora do ar, vai direto pro próximo.
+    Se todos falharem, espera um pouco e dá mais uma volta na lista."""
     modelos = [m.strip() for m in config.GEMINI_MODEL.split(",") if m.strip()]
     ultimo = None
-    for modelo in modelos:
-        geracao = {"temperature": 1.0, "thinkingConfig": {"thinkingLevel": "low"}}
-        if json_saida:
-            geracao["responseMimeType"] = "application/json"
-        corpo = {"contents": [{"role": "user", "parts": [{"text": prompt}]}],
-                 "generationConfig": geracao}
-        try:
+    for volta in range(1, voltas + 1):
+        for modelo in modelos:
             try:
-                dados = post(f"models/{modelo}:generateContent", corpo,
-                             timeout=config.GEMINI_TIMEOUT, tentativas=2)
-            except GeminiErro as e:
-                if e.codigo != 400:
-                    raise
-                # modelo não aceita o ajuste de raciocínio: tenta sem ele
-                geracao.pop("thinkingConfig", None)
-                dados = post(f"models/{modelo}:generateContent", corpo,
-                             timeout=config.GEMINI_TIMEOUT, tentativas=2)
-            partes = dados["candidates"][0]["content"]["parts"]
-            return "".join(p.get("text", "") for p in partes if not p.get("thought"))
-        except (GeminiErro, KeyError, IndexError) as e:
-            ultimo = e
-            print(f"[gemini] modelo {modelo} falhou ({str(e)[:200]}); tentando o próximo")
+                return _uma_chamada(modelo, prompt, json_saida)
+            except (GeminiErro, KeyError, IndexError) as e:
+                ultimo = e
+                print(f"[gemini] {modelo} falhou ({str(e)[:120].strip()}); indo pro próximo")
+        if volta < voltas:
+            print("[gemini] todos os modelos falharam; esperando 60s pra tentar de novo")
+            time.sleep(60)
     raise GeminiErro(f"Nenhum modelo do Gemini respondeu. Último erro: {ultimo}")
