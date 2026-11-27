@@ -9,6 +9,7 @@ import asyncio
 import base64
 import subprocess
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -105,9 +106,21 @@ def _imagem_cloudflare(prompt: str, destino: Path, busca: str | None = None) -> 
     req = urllib.request.Request(url, data=corpo, headers={
         "Authorization": f"Bearer {config.CLOUDFLARE_API_TOKEN}",
         "Content-Type": "application/json",
+        "User-Agent": "curiosidades-shorts/1.0",
     })
-    with urllib.request.urlopen(req, timeout=120) as r:
-        dados, tipo = r.read(), r.headers.get("Content-Type", "")
+    try:
+        with urllib.request.urlopen(req, timeout=120) as r:
+            dados, tipo = r.read(), r.headers.get("Content-Type", "")
+    except urllib.error.HTTPError as e:
+        # a Cloudflare explica o motivo no corpo da resposta
+        try:
+            erros = json.loads(e.read()).get("errors", [])
+            motivo = "; ".join(f"{x.get('code')}: {x.get('message')}" for x in erros) or e.reason
+        except Exception:  # noqa: BLE001
+            motivo = e.reason
+        erro = RuntimeError(f"Cloudflare {e.code}: {motivo}")
+        erro.code = e.code
+        raise erro from e
     if tipo.startswith("image/"):
         destino.write_bytes(dados)
         return destino
