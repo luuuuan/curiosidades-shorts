@@ -111,7 +111,7 @@ def cmd_gerar() -> int:
             traceback.print_exc()
             if config.APROVACAO and not config.DRY_RUN:
                 import telegram_bot as tg
-                tg.enviar_texto(f"❌ Não consegui gerar o vídeo: {e}")
+                tg.enviar_texto(f"❌ Não consegui gerar o vídeo: {config.ocultar(e)}")
     return 1 if falhas == config.VIDEOS_POR_EXECUCAO else 0
 
 
@@ -130,7 +130,7 @@ def _aprovar(cq: dict, vid: str) -> None:
     except Exception as e:  # noqa: BLE001
         traceback.print_exc()
         tg.trocar_botoes(msg["message_id"], tg.botoes(vid))
-        tg.enviar_texto(f"❌ Erro ao postar: {e}\nPode tentar Aprovar de novo.",
+        tg.enviar_texto(f"❌ Erro ao postar: {config.ocultar(e)}\nPode tentar Aprovar de novo.",
                         reply_to=msg["message_id"])
 
 
@@ -211,7 +211,7 @@ def cmd_revisar() -> int:
         except Exception as e:  # noqa: BLE001
             traceback.print_exc()
             try:
-                tg.enviar_texto(f"❌ Deu erro: {e}")
+                tg.enviar_texto(f"❌ Deu erro: {config.ocultar(e)}")
             except Exception:  # noqa: BLE001
                 pass
         finally:
