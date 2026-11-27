@@ -5,6 +5,8 @@
 
 Com DRY_RUN=true, "gerar" só salva o vídeo na pasta saida/.
 """
+import json
+import os
 import shutil
 import sys
 import tempfile
@@ -176,8 +178,15 @@ def cmd_revisar() -> int:
         print("[revisar] TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID não configurados")
         return 1
 
-    updates = sorted(tg.novidades(), key=lambda u: u["update_id"])
-    print(f"[revisar] {len(updates)} novidade(s)")
+    # Com o Worker da Cloudflare, a mensagem chega pronta pelo GitHub (TELEGRAM_UPDATE).
+    # Sem ele, busca as novidades no Telegram (modo antigo, de 15 em 15 min).
+    bruto = os.getenv("TELEGRAM_UPDATE", "").strip()
+    via_webhook = bool(bruto) and bruto != "null"
+    if via_webhook:
+        updates = [json.loads(bruto)]
+    else:
+        updates = sorted(tg.novidades(), key=lambda u: u["update_id"])
+    print(f"[revisar] {len(updates)} novidade(s){' (via Worker)' if via_webhook else ''}")
     for u in updates:
         try:
             cq = u.get("callback_query")
@@ -215,7 +224,8 @@ def cmd_revisar() -> int:
             except Exception:  # noqa: BLE001
                 pass
         finally:
-            tg.confirmar_ate(u["update_id"])
+            if not via_webhook:
+                tg.confirmar_ate(u["update_id"])
     return 0
 
 
