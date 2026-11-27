@@ -2,8 +2,8 @@
 
 Gera e posta Shorts de curiosidades sozinho, de graça, rodando no GitHub Actions.
 
-**Fluxo:** Gemini escreve o roteiro → uma segunda chamada checa os fatos → Pollinations gera
-as imagens → Gemini TTS narra em pt-BR → Whisper marca o tempo de cada palavra → FFmpeg monta
+**Fluxo:** Gemini escreve o roteiro → uma segunda chamada checa os fatos → Cloudflare (FLUX)
+gera as imagens, com fotos do Pexels de reserva → Gemini TTS narra em pt-BR → Whisper marca o tempo de cada palavra → FFmpeg monta
 o vídeo vertical com zoom e legenda → **manda pra você aprovar no Telegram** → se aprovar,
 posta no YouTube; se pedir ajuste, refaz com o seu pedido e manda de novo.
 
@@ -17,8 +17,13 @@ Se a voz do Gemini falhar ou bater o limite, o edge-tts entra no lugar automatic
 
 - **Gemini (grátis):** aistudio.google.com → Get API key → Create API key. Serve para o
   roteiro e para a voz.
-- **Pollinations (opcional):** sem chave funciona, com limite de 1 imagem a cada 15s.
-  Uma chave grátis em enter.pollinations.ai tira esse limite (`POLLINATIONS_KEY`).
+- **Cloudflare (imagens por IA, grátis):** crie conta em dash.cloudflare.com.
+  - `CLOUDFLARE_ACCOUNT_ID`: aparece em **Workers AI** (ou na barra lateral, "Account ID").
+  - `CLOUDFLARE_API_TOKEN`: **Workers AI → Use REST API → Create a Workers AI API Token**.
+- **Pexels (fotos reais, grátis, reserva):** crie conta em pexels.com/api e peça a chave
+  (`PEXELS_API_KEY`). Quando o vídeo usa foto do Pexels, o crédito entra na descrição.
+
+Precisa de pelo menos uma das duas fontes de imagem; com as duas, se uma falhar, a outra assume.
 
 ## 2. YouTube (feito uma vez só)
 
@@ -101,7 +106,8 @@ respondeu.
    - `YT_CLIENT_ID`
    - `YT_CLIENT_SECRET`
    - `YT_REFRESH_TOKEN`
-   - `POLLINATIONS_KEY` (opcional)
+   - `CLOUDFLARE_ACCOUNT_ID` e `CLOUDFLARE_API_TOKEN`
+   - `PEXELS_API_KEY`
 3. Aba **Actions** → libere os workflows se o GitHub pedir.
 4. Para testar na hora: **Actions → Gerar Short → Run workflow**. Clique na execução para
    ver o log. Em poucos minutos o vídeo chega no Telegram.
@@ -128,7 +134,7 @@ Isso também evita que o GitHub pause o agendamento (ele pausa repositório para
 | `VIDEOS_POR_EXECUCAO` | 1 | Vídeos por execução |
 | `YT_PRIVACY` | public | public, unlisted ou private |
 | `TTS_PROVIDER` | gemini | gemini, edge ou openai |
-| `IMAGE_PROVIDER` | pollinations | pollinations ou openai |
+| `IMAGE_PROVIDER` | cloudflare,pexels | Ordem das fontes de imagem |
 | `LLM_PROVIDER` | gemini | gemini ou claude |
 
 **Limite do YouTube:** a cota padrão da API (10.000 unidades/dia) dá uns 6 uploads por dia.
